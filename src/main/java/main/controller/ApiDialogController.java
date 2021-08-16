@@ -1,19 +1,21 @@
 package main.controller;
 
-import main.service.DialogService;
+import main.api.request.NewDialogRequest;
+import main.service.dialog.DialogService;
+import main.service.dialog.MessageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/dialogs")
 public class ApiDialogController {
 
     private final DialogService dialogService;
+    public final MessageService messageService;
 
-    public ApiDialogController(DialogService dialogService) {
+    public ApiDialogController(DialogService dialogService, MessageService messageService) {
         this.dialogService = dialogService;
+        this.messageService = messageService;
     }
 
     @GetMapping("")
@@ -33,12 +35,17 @@ public class ApiDialogController {
     }
 
     @PostMapping("/")
-    public ResponseEntity <?> newDialog (@RequestParam (name = "user_ids") List<Integer> userIds){
-        return dialogService.newDialog(userIds);
+    public ResponseEntity <?> newDialog (@RequestBody NewDialogRequest request){
+        return dialogService.newDialog(request.getUserIds());
     }
 
     @GetMapping("/unreaded")
     public ResponseEntity <?> getUnread () {
         return dialogService.getUnread();
+    }
+
+    @PostMapping("/{id}/messages")
+    public ResponseEntity <?> sendMessage (@PathVariable Integer id, @RequestParam(name = "message_text") String messageText){
+        return messageService.sendMessage(id, messageText);
     }
 }

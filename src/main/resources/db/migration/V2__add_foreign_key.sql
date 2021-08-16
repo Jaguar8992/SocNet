@@ -13,9 +13,6 @@ alter table friendship add constraint FK5lidm6cqbc7u4xhqpxm210qme foreign key (d
 alter table message add constraint FK5lidm6cqbc785xhqpxm210qme foreign key (author_id)
     references user (id);
 
-alter table message add constraint FK5lidm6cqbc785xhqpxm310qme foreign key (recipient_id)
-    references user (id);
-
 alter table post add constraint FK5lidm6cqbc785xhqpxm157qme foreign key (author_id)
     references user (id);
 

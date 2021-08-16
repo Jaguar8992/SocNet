@@ -20,5 +20,5 @@ public interface NotificationSettingRepository extends JpaRepository<Notificatio
     List<NotificationSetting> findByUserId(Integer userId);
 
     @Query("SELECT DISTINCT isEnable FROM NotificationSetting WHERE user_id = :user_id AND type = :setting")
-    Byte getNotificationSetting(@Param("user_id") Integer userId, @Param("setting") NotificationType setting);
+    Optional <Byte> getNotificationSetting(@Param("user_id") Integer userId, @Param("setting") NotificationType setting);
 }

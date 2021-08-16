@@ -46,7 +46,6 @@ CREATE TABLE message (
     id integer not null AUTO_INCREMENT,
     time datetime(6) not null,
     author_id integer not null,
-    recipient_id integer not null,
     message_text TEXT,
     read_status enum('SENT','READ') not null,
     dialog_id integer not null,

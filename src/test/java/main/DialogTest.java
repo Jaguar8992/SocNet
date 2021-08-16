@@ -1,6 +1,6 @@
 package main;
 
-import main.service.DialogService;
+import main.service.dialog.DialogService;
 import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,8 +17,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
@@ -76,5 +78,25 @@ public class DialogTest {
         mockMvc.perform(MockMvcRequestBuilders.get(port + "/api/v1/dialogs/{1}/messages")
                 .accept(MediaType.ALL))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Get unread message")
+    @WithUserDetails("IvanovMaksim@ya.ru")
+    public void getUnreadMessage() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get(port + "/api/v1/dialogs/unreaded"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("error\":\"string")));
+    }
+
+    @Test
+    @DisplayName("Post new Dialog")
+    @WithUserDetails("IvanovMaksim@ya.ru")
+    public void postNewDialog () throws Exception {
+        mockMvc.perform(post("/api/v1/dialogs/")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(("{\"user_ids\" : [2,3]}")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("error\":\"string")));
     }
 }

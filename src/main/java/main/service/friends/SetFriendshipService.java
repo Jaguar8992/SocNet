@@ -100,8 +100,9 @@ public class SetFriendshipService {
 
         friendshipRepository.save(friendship);
 
+        //EntityId сушность относительно которой созданно оповещение (сообщения, добавление в друзья и т.д.)
         if (friendship.getStatus() == FriendshipStatus.REQUEST) {
-            notificationApi.createNotification(NotificationType.FRIEND_REQUEST, dstUser, user.getId());
+            notificationApi.createNotification(NotificationType.FRIEND_REQUEST, dstUser, friendship.getId());
         }
 
         log.info("Successfully");

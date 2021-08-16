@@ -30,7 +30,6 @@ public class MessageResponse extends AbstractResponse {
         super(message.getId());
         this.time = message.getTime().toEpochSecond(ZoneOffset.UTC);
         this.authorId = message.getAuthor().getId();
-        this.recipientId = message.getRecipient().getId();
         this.messageText = message.getMessageText();
         this.readStatus = message.getReadStatus().toString();
     }

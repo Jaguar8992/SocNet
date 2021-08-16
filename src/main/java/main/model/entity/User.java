@@ -98,9 +98,6 @@ public class User {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PostComment> comments;
 
-    @OneToMany(mappedBy = "recipient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Message> messages;
-
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(
             name = "user_id",

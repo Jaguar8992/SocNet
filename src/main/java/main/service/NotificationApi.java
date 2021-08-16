@@ -2,6 +2,7 @@ package main.service;
 
 import main.mailSender.MailSender;
 import main.model.entity.Notification;
+import main.model.entity.NotificationSetting;
 import main.model.entity.User;
 import main.model.entity.enums.NotificationType;
 import main.model.repository.NotificationRepository;
@@ -11,20 +12,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class NotificationApi
 {
 
     private final NotificationRepository notificationRepository;
-    private final UserService userService;
     private final NotificationSettingRepository notificationSettingRepository;
 
     @Autowired
     public NotificationApi(NotificationRepository notificationRepository, UserService userService, UserRepository userRepository, NotificationSettingRepository notificationSettingRepository)
     {
         this.notificationRepository = notificationRepository;
-        this.userService = userService;
         this.notificationSettingRepository = notificationSettingRepository;
     }
 
@@ -58,7 +58,17 @@ public class NotificationApi
 
     private void sendToMail(NotificationType notificationType, String mail, User user)
     {
-        if (notificationSettingRepository.getNotificationSetting(user.getId(), notificationType) == 1) {
+        Optional <Byte> optionalSetting = notificationSettingRepository.getNotificationSetting(user.getId(), notificationType);
+
+        if (optionalSetting.isEmpty()) {
+
+            NotificationSetting setting = new NotificationSetting();
+            setting.setIsEnable((byte) 0);
+            setting.setUserId(user.getId());
+            setting.setType(notificationType);
+            notificationSettingRepository.save(setting);
+
+        } else if (optionalSetting.get() == 1) {
             switch (notificationType) {
                 case FRIEND_REQUEST:
                     MailSender.sendMessage(mail, "New friend request",

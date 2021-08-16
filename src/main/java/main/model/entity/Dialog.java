@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -50,5 +51,13 @@ public class Dialog {
         byte[] array = new byte[25];
         new Random().nextBytes(array);
         this.inviteUrl = UUID.nameUUIDFromBytes(array).toString();
+    }
+
+    public void incrementUnread (){
+        unreadCount++;
+    }
+
+    public void decrementUnread (){
+        unreadCount--;
     }
 }

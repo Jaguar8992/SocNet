@@ -32,10 +32,6 @@ public class Message {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
-    @ManyToOne
-    @JoinColumn(name = "recipient_id", nullable = false)
-    private User recipient;
-
     @Column(name = "message_text", columnDefinition = "TEXT", nullable = false)
     private String messageText;
 
