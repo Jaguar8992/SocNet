@@ -20,24 +20,21 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebMvcConfigurer
-{
+public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebMvcConfigurer {
     private final UserDetailsService userDetailsService;
 
     @Value("${application.host}")
     private String applicationHost;
 
     @Autowired
-    public SecurityConfig(@Qualifier("userDetailServiceImpl") UserDetailsService userDetailsService)
-    {
+    public SecurityConfig(@Qualifier("userDetailServiceImpl") UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception
-    {
+    protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeRequests()
-                .antMatchers("/**").permitAll()
+                .antMatchers("/**", "/resources/static/image/**").permitAll()
                 .anyRequest()
                 .authenticated()
                 .and()
@@ -48,8 +45,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
     }
 
     @Bean
-    protected DaoAuthenticationProvider daoAuthenticationProvider()
-    {
+    protected DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
         daoAuthenticationProvider.setUserDetailsService(this.userDetailsService);
@@ -57,21 +53,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder()
-    {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
 
     @Override
     @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception
-    {
+    public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
 
     @Override
-    public void addCorsMappings(CorsRegistry registry)
-    {
+    public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(applicationHost)
                 .allowedOriginPatterns("/**")
@@ -79,5 +72,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
                 .allowedHeaders("Authorization", "Cache-Control", "Content-Type", "Access-Control-Allow-Origin")
                 .allowCredentials(true);
     }
-
 }

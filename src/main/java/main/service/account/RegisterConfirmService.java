@@ -1,10 +1,10 @@
 package main.service.account;
 
-import main.api.response.account.Error;
 import main.api.dto.DTOError;
 import main.api.dto.DTOErrorDescription;
 import main.api.dto.DTOMessage;
 import main.api.dto.DTOSuccessfully;
+import main.api.response.error.ErrorResponse;
 import main.model.entity.TokenToUser;
 import main.model.entity.User;
 import main.model.repository.TokenToUserRepository;
@@ -38,14 +38,14 @@ public class RegisterConfirmService {
 
         if (tokenToUser.isEmpty()) {
             log.error(DTOErrorDescription.EXPIRED.get());
-            return ResponseEntity.badRequest().body(new Error(
+            return ResponseEntity.badRequest().body(new ErrorResponse(
                     DTOError.INVALID_REQUEST.get(),
                     DTOErrorDescription.EXPIRED.get()));
         }
 
         if (userId != tokenToUser.get().getUserId()) {
             log.error(DTOErrorDescription.BAD_CREDENTIALS.get());
-            return ResponseEntity.badRequest().body(new Error(
+            return ResponseEntity.badRequest().body(new ErrorResponse(
                     DTOError.INVALID_REQUEST.get(),
                     DTOErrorDescription.BAD_CREDENTIALS.get()));
         }
@@ -54,7 +54,7 @@ public class RegisterConfirmService {
 
         if (userOptional.isEmpty()) {
             log.error(DTOErrorDescription.BAD_CREDENTIALS.get());
-            return ResponseEntity.badRequest().body(new Error(
+            return ResponseEntity.badRequest().body(new ErrorResponse(
                     DTOError.INVALID_REQUEST.get(),
                     DTOErrorDescription.BAD_CREDENTIALS.get()));
         }

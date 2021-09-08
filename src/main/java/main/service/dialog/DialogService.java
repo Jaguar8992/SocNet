@@ -1,14 +1,14 @@
 package main.service.dialog;
 
-import main.api.dto.dialog.DTODialogId;
-import main.api.dto.dialog.DTODialogUnreadCount;
-import main.api.response.account.Error;
 import main.api.dto.DTOError;
 import main.api.dto.DTOErrorDescription;
+import main.api.dto.DTOSuccessfully;
+import main.api.dto.dialog.DTODialogId;
+import main.api.dto.dialog.DTODialogUnreadCount;
+import main.api.response.PageCommonResponseList;
 import main.api.response.dialog.DialogResponse;
-import main.api.response.dialog.DialogResponseList;
 import main.api.response.dialog.MessageResponse;
-import main.api.response.dialog.NewDialogResponse;
+import main.api.response.error.ErrorResponse;
 import main.model.entity.Dialog;
 import main.model.entity.Message;
 import main.model.entity.User;
@@ -36,14 +36,16 @@ public class DialogService {
     private final UserService userService;
     private final DialogRepository dialogRepository;
     private final MessageRepository messageRepository;
+    private final MessageService messageService;
     private final UserRepository userRepository;
     private final Logger log = Logger.getLogger(DialogService.class.getName());
 
     @Autowired
-    public DialogService(UserService userService, DialogRepository dialogRepository, MessageRepository messageRepository, UserRepository userRepository) {
+    public DialogService(UserService userService, DialogRepository dialogRepository, MessageRepository messageRepository, MessageService messageService, UserRepository userRepository) {
         this.userService = userService;
         this.dialogRepository = dialogRepository;
         this.messageRepository = messageRepository;
+        this.messageService = messageService;
         this.userRepository = userRepository;
     }
 
@@ -54,7 +56,7 @@ public class DialogService {
         } catch (UsernameNotFoundException ex) {
             log.error(DTOError.UNAUTHORIZED.get());
             return ResponseEntity.status(401).body(
-                    new Error(DTOError.UNAUTHORIZED.get(), DTOErrorDescription.UNAUTHORIZED.get()));
+                    new ErrorResponse(DTOError.UNAUTHORIZED.get(), DTOErrorDescription.UNAUTHORIZED.get()));
         }
 
         Page<Dialog> dialogs = dialogRepository
@@ -62,12 +64,13 @@ public class DialogService {
 
         List<DialogResponse> data = new ArrayList<>();
         dialogs.forEach(dialog ->
-                data.add(new DialogResponse(dialog)));
-
-        long timestamp = LocalDateTime.now().atZone(ZoneId.of("Europe/Moscow")).toEpochSecond();
+        {
+            Long unreadMessage = dialogRepository.calculateUnreadMessage(currentUser, dialog);
+            data.add(new DialogResponse(dialog, currentUser, unreadMessage));
+        });
 
         return ResponseEntity
-                .ok(new DialogResponseList<>("string", timestamp, data.size(), offset, itemPerPage, data));
+                .ok(new PageCommonResponseList<>("string", data.size(), offset, itemPerPage, data));
     }
 
     public ResponseEntity<?> getMessages(Integer id, String query, Integer offset, Integer itemPerPage) {
@@ -77,7 +80,7 @@ public class DialogService {
         } catch (UsernameNotFoundException ex) {
             log.error(DTOError.UNAUTHORIZED.get());
             return ResponseEntity.status(401).body(
-                    new Error(DTOError.UNAUTHORIZED.get(), DTOErrorDescription.UNAUTHORIZED.get()));
+                    new ErrorResponse(DTOError.UNAUTHORIZED.get(), DTOErrorDescription.UNAUTHORIZED.get()));
         }
 
         Dialog dialog = getDialogById(id);
@@ -86,11 +89,9 @@ public class DialogService {
                 .findAllByDialogAndMessageTextContaining(dialog, query, PageRequest.of(offset, itemPerPage));
 
         List<MessageResponse> data = new ArrayList<>();
-        messages.forEach(message -> data.add(new MessageResponse(message)));
+        messages.forEach(message -> data.add(new MessageResponse(message, currentUser)));
 
-        long timestamp = LocalDateTime.now().atZone(ZoneId.of("Europe/Moscow")).toEpochSecond();
-
-        return ResponseEntity.ok(new DialogResponseList<>("strings", timestamp, data.size(), offset, itemPerPage, data));
+        return ResponseEntity.ok(new PageCommonResponseList<>("strings", data.size(), offset, itemPerPage, data));
     }
 
     public Dialog getDialogById(Integer dialogId) {
@@ -101,54 +102,67 @@ public class DialogService {
                 });
     }
 
-    public ResponseEntity <?> newDialog (List <Integer> userIds){
+    public ResponseEntity<?> newDialog(List<Integer> userIds) {
+
         User currentUser;
         try {
             currentUser = userService.getCurrentUser();
         } catch (UsernameNotFoundException ex) {
             log.error(DTOError.UNAUTHORIZED.get());
             return ResponseEntity.status(401).body(
-                    new Error(DTOError.UNAUTHORIZED.get(), DTOErrorDescription.UNAUTHORIZED.get()));
+                    new ErrorResponse(DTOError.UNAUTHORIZED.get(), DTOErrorDescription.UNAUTHORIZED.get()));
         }
 
-        List <User> users;
-        try {
-            users = userRepository.getUsersForDialog(userIds);
-            users.add(currentUser);
-        } catch (Exception ex) {
-            log.error(ex);
-            return ResponseEntity.badRequest().body(new Error(
-                    DTOError.INVALID_REQUEST.get(),
-                    DTOErrorDescription.BAD_CREDENTIALS.get()));
+        List<User> users = userRepository.getUsersForDialog(userIds);
+        if (users.isEmpty() || currentUser.equals(users.get(0))) {
+            log.error(DTOError.BAD_REQUEST.get());
+            return ResponseEntity.status(400).body(
+                    new ErrorResponse(DTOError.BAD_REQUEST.get(), DTOErrorDescription.BAD_REQUEST.get()));
         }
 
-        Dialog dialog = new Dialog();
 
-        dialog.setOwner(currentUser);
-        dialog.setRecipients(users);
-        dialog.setDeleted(false);
+        List<Dialog> dialogFor2Users = dialogRepository.getDialogFor2Users(currentUser, users.get(0));
 
-        dialogRepository.save(dialog);
+        Dialog dialog;
+        StringBuilder sb = new StringBuilder();
+        if (dialogFor2Users.isEmpty()) {
+            sb.append(users.get(0).getLastName());
+            sb.append(" ");
+            sb.append(users.get(0).getFirstName());
+
+            dialog = new Dialog();
+
+            dialog.setOwner(currentUser);
+            dialog.setRecipient(users.get(0));
+            dialog.setDeleted(false);
+            Dialog save = dialogRepository.save(dialog);
+
+            Message firstMessage = messageService.newMessage(save, currentUser,
+                    "Новый диалог с пользователем " + sb.toString());
+
+        } else {
+            dialog = dialogFor2Users.get(0);
+        }
 
         long timestamp = LocalDateTime.now().atZone(ZoneId.of("Europe/Moscow")).toEpochSecond();
 
-        return ResponseEntity.ok(new NewDialogResponse("string", timestamp, new DTODialogId(dialog.getId())));
+        return ResponseEntity.ok(new DTOSuccessfully("string", timestamp, new DTODialogId(dialog.getId())));
     }
 
-    public ResponseEntity <?> getUnread (){
+    public ResponseEntity<?> getUnread() {
         User currentUser;
         try {
             currentUser = userService.getCurrentUser();
         } catch (UsernameNotFoundException ex) {
             log.error(DTOError.UNAUTHORIZED.get());
             return ResponseEntity.status(401).body(
-                    new Error(DTOError.UNAUTHORIZED.get(), DTOErrorDescription.UNAUTHORIZED.get()));
+                    new ErrorResponse(DTOError.UNAUTHORIZED.get(), DTOErrorDescription.UNAUTHORIZED.get()));
         }
 
         long unreadCount = messageRepository.getCountOfUnreadMessage(currentUser);
         long timestamp = LocalDateTime.now().atZone(ZoneId.of("Europe/Moscow")).toEpochSecond();
 
-        return ResponseEntity.ok(new NewDialogResponse("string", timestamp, new DTODialogUnreadCount(unreadCount)));
+        return ResponseEntity.ok(new DTOSuccessfully("string", timestamp, new DTODialogUnreadCount(unreadCount)));
     }
 
 }

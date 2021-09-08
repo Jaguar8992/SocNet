@@ -1,0 +1,41 @@
+spring:
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_user}
+    password: ${DB_password}
+
+  flyway:
+    baseline-on-migrate: true
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+server:
+  port: ${PORT:8086}
+
+local:
+  server:
+    port: http://localhost:8086
+
+#application.host: http://ec2-18-117-144-254.us-east-2.compute.amazonaws.com
+application.host: http://127.0.0.1:8080
+application.server.host: http://localhost:8086
+hCaptcha.secretKey : 0x80C47b712f18D6e49DC3c33119FCfc876Ae24338
+
+scheduler:
+  enable: true
+  fixedRate: 900000
+  cronBirthDay: "0 0 7 * * *"
+  notificationMinDelay: 15
+
+---
+spring:
+  profiles: test_config
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: false

@@ -2,9 +2,7 @@ package main.service.friends;
 
 import main.api.dto.DTOMessage;
 import main.api.dto.DTOSuccessfully;
-import main.api.response.friendsget.FriendsRecommendationsResponseList;
-import main.api.response.friendsget.FriendsRequestResponseList;
-import main.api.response.friendsget.FriendsResponseList;
+import main.api.response.PageCommonResponseList;
 import main.api.response.user.UserResponse;
 import main.model.entity.User;
 import main.model.repository.FriendshipRepository;
@@ -29,8 +27,7 @@ public class FriendsService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final FriendshipRepository friendshipRepository;
-
-    private final Logger log = Logger.getLogger(FriendsService.class.getName());
+    private final Logger logger = Logger.getLogger(FriendsService.class.getName());
 
     @Autowired
     public FriendsService(UserRepository userRepository, UserService userService, FriendshipRepository friendshipRepository) {
@@ -39,34 +36,37 @@ public class FriendsService {
         this.friendshipRepository = friendshipRepository;
     }
 
-    public FriendsResponseList getFriends(String name, Integer offset, Integer itemPerPage) {
+    public List<User> getAllMyFriends(User user) {
+        return userRepository.getAllMyFriends(user);
+    }
+
+    public PageCommonResponseList<?> getFriends(String name, Integer offset, Integer itemPerPage) {
         Pageable pageable = PageRequest.of(offset, itemPerPage);
-        //TODO: add check for null user
+
         List<User> userPage;
         if (!name.equals("")) {
             userPage = userRepository.getFriendsByName(userService.getCurrentUser(), name, pageable);
         } else {
-            userPage = userRepository.getAllMyFriends(userService.getCurrentUser(), pageable);
+            userPage = getAllMyFriends(userService.getCurrentUser());
         }
 
         List<UserResponse> friendsData = new ArrayList<>();
 
         for (int i = 0; i < userPage.size(); i++) {
-            System.out.println(userPage.get(i).getId());
-            System.out.println(userPage.get(i).getFirstName());
             friendsData.add(new UserResponse(userPage.get(i)));
         }
 
-        return new FriendsResponseList(
+        logger.info(FriendsService.class.getName() + " getFriends() " + " Successfully");
+
+        return new PageCommonResponseList<>(
                 "string",
-                Instant.now().getEpochSecond(),
                 userPage.size(),
                 offset,
                 itemPerPage,
                 friendsData);
     }
 
-    public FriendsRecommendationsResponseList getRecommendations(Integer offset, Integer itemPerPage) {
+    public PageCommonResponseList<?> getRecommendations(Integer offset, Integer itemPerPage) {
         Pageable pageable = PageRequest.of(offset, itemPerPage);
 
         Page<User> friendsRecommendations = userRepository.getFriendsRecommendations(userService.getCurrentUser(), pageable);
@@ -76,16 +76,17 @@ public class FriendsService {
 
         content.forEach(user -> friends.add(new UserResponse(user)));
 
-        return new FriendsRecommendationsResponseList(
+        logger.info(FriendsService.class.getName() + " getRecommendations() " + " Successfully");
+
+        return new PageCommonResponseList<>(
                 "string",
-                Instant.now().getEpochSecond(),
                 content.size(),
                 offset,
                 itemPerPage,
                 friends);
     }
 
-    public FriendsRequestResponseList getRequests(String name, Integer offset, Integer itemPerPage) {
+    public PageCommonResponseList<?> getRequests(String name, Integer offset, Integer itemPerPage) {
         Pageable pageable = PageRequest.of(offset, itemPerPage);
         //TODO: add check for null user
         Page<User> userPage;
@@ -102,9 +103,10 @@ public class FriendsService {
             friendsData.add(new UserResponse(userPage.getContent().get(i)));
         }
 
-        return new FriendsRequestResponseList(
+        logger.info(FriendsService.class.getName() + " getRequests() " + " Successfully");
+
+        return new PageCommonResponseList<>(
                 "string",
-                Instant.now().getEpochSecond(),
                 userPage.getContent().size(),
                 offset,
                 itemPerPage,

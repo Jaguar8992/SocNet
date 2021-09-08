@@ -10,7 +10,8 @@ public enum DTOErrorDescription {
     EXPIRED("Token expired"),
     EXIST("This email already exist"),
     BAD_REQUEST("Bad Request"),
-    CAPTCHA_INCORRECT("Captcha incorrect");
+    CAPTCHA_INCORRECT("Captcha incorrect"),
+    NOT_APPROVED("Email is not approved");
 
     private final String errorDescriptionMessage;
 

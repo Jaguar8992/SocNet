@@ -1,7 +1,6 @@
 package main.model.entity.enums;
 
-public enum FriendshipStatusCode
-{
+public enum FriendshipStatusCode {
     REQUEST,
     FRIEND,
     BLOCKED,

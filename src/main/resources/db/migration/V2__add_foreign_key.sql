@@ -16,6 +16,9 @@ alter table message add constraint FK5lidm6cqbc785xhqpxm210qme foreign key (auth
 alter table post add constraint FK5lidm6cqbc785xhqpxm157qme foreign key (author_id)
     references user (id);
 
+alter table file_info add constraint FK5werg6cqbc785xhqpxm157qme foreign key (owner_id)
+    references user (id);
+
 alter table post2tag add constraint FK5lidm6cqbc785xhqpxm895qme foreign key (post_id)
     references post (id);
 
@@ -64,11 +67,8 @@ alter table block_history add constraint FKaawaqxjs3br8dw5v90w7uu514 foreign key
 alter table message add constraint FKaawaqxjs3br8da5v90w7uu114 foreign key (dialog_id)
     references dialog (id);
 
-alter table user2dialog add constraint FKaawaqxes3br8dw5v90w7uu314 foreign key (dialog_id)
-    references dialog (id);
-
-alter table user2dialog add constraint FKaawaqejs3br8dw5v90w7uu314 foreign key (user_id)
-    references user (id);
-
 alter table dialog add constraint FKaawaqxjs3bf8dw5v30w7uuf14 foreign key (owner_id)
     references user (id);
+
+alter table dialog add constraint FKaawaers6bf8dw5v30w7uuf14 foreign key (recipient_id)
+        references user (id);

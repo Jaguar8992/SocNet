@@ -21,8 +21,9 @@ public class NotificationSetting {
     @Enumerated(EnumType.STRING)
     private NotificationType type;
 
-    @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "is_enable")
     private byte isEnable;

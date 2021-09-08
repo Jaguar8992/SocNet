@@ -1,6 +1,5 @@
 package main.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,7 +19,10 @@ public class Tag {
     @Column(nullable = false)
     private String name;
 
-    @ManyToMany(mappedBy = "tags")
-    @JsonIgnore
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "post2tag",
+            joinColumns = @JoinColumn(name = "tag_id"),
+            inverseJoinColumns = @JoinColumn(name = "post_id"))
     private List<Post> posts;
 }

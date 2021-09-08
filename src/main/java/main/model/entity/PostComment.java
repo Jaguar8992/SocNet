@@ -31,6 +31,9 @@ public class PostComment {
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
+    @Transient
+    private long likes;
+
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private PostComment parent;
@@ -45,6 +48,9 @@ public class PostComment {
     @Column(name = "is_blocked", nullable = false)
     private byte isBlocked;
 
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted;
+
     @OneToMany(mappedBy = "entityId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> entity;
 
@@ -54,6 +60,14 @@ public class PostComment {
 
     public void setIsBlocked(boolean isBlocked) {
         this.isBlocked = isBlocked ? (byte) 1 : (byte) 0;
+    }
+
+    public Boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 }
 

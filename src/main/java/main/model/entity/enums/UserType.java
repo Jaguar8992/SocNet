@@ -1,7 +1,6 @@
 package main.model.entity.enums;
 
-public enum UserType
-{
+public enum UserType {
     MODERATOR,
     ADMIN,
     USER

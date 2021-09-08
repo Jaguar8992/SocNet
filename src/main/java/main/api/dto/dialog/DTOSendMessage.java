@@ -2,13 +2,10 @@ package main.api.dto.dialog;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.List;
+import main.api.dto.DTO;
 
 @Data
-public class DTOSendMessage  implements DTODialog{
+public class DTOSendMessage implements DTO {
 
     private int id;
     private long time;

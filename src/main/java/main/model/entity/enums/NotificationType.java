@@ -1,7 +1,6 @@
 package main.model.entity.enums;
 
-public enum NotificationType
-{
+public enum NotificationType {
     POST("1"),
     POST_COMMENT("2"),
     COMMENT_COMMENT("3"),
@@ -15,8 +14,7 @@ public enum NotificationType
         this.type = type;
     }
 
-    public String get()
-    {
+    public String get() {
         return type;
     }
 

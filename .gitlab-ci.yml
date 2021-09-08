@@ -1,0 +1,19 @@
+image: maven:3.6-jdk-13
+
+stages:
+  - build
+
+maven-build:
+  stage: build
+  tags:
+    - docker
+  script:
+    - mvn package
+    - cat target/jacoco-report/index.html
+  artifacts:
+    paths:
+      - target/surefire-reports/
+      - target/jacoco-report/index.html
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml

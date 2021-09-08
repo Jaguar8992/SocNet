@@ -1,11 +1,12 @@
 package main.controller;
 
-import main.api.response.account.Error;
 import main.api.dto.DTOError;
+import main.api.response.error.ErrorResponse;
 import main.model.entity.enums.FriendshipStatus;
+import main.service.friends.FriendsService;
 import main.service.friends.RequestService;
 import main.service.friends.SetFriendshipService;
-import main.service.friends.FriendsService;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ public class ApiFriendsController {
     private final FriendsService friendsService;
     private final SetFriendshipService setFriendshipService;
     private final RequestService requestService;
+    private final Logger LOGGER = Logger.getLogger(ApiFriendsController.class.getName());
 
     @Autowired
     public ApiFriendsController(FriendsService friendsService, SetFriendshipService setFriendshipService, RequestService requestService) {
@@ -34,13 +36,11 @@ public class ApiFriendsController {
             @RequestParam(required = false, defaultValue = "0") Integer offset,
             @RequestParam(required = false, defaultValue = "20") Integer itemPerPage,
             Principal principal) {
-        System.out.println("/api/v1/friends name: " + name);
-        System.out.println("/api/v1/friends offset: " + offset);
-        System.out.println("/api/v1/friends itemPerPage: " + itemPerPage);
 
+        LOGGER.info("getFriends\nname: " + name + "\noffset: " + offset + "\nitemPerPage: " + itemPerPage);
         if (principal == null) {
             return new ResponseEntity<>(
-                    new Error(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
+                    new ErrorResponse(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
         }
 
         return ResponseEntity.ok(friendsService.getFriends(name, offset, itemPerPage));
@@ -58,7 +58,7 @@ public class ApiFriendsController {
 
         if (principal == null) {
             return new ResponseEntity<>(
-                    new Error(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
+                    new ErrorResponse(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
         }
 
         return ResponseEntity.ok(friendsService.getRequests(name, offset, itemPerPage));
@@ -74,7 +74,7 @@ public class ApiFriendsController {
 
         if (principal == null) {
             return new ResponseEntity<>(
-                    new Error(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
+                    new ErrorResponse(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
         }
 
         return ResponseEntity.ok(friendsService.getRecommendations(offset, itemPerPage));
@@ -86,28 +86,24 @@ public class ApiFriendsController {
 
         if (principal == null) {
             return new ResponseEntity<>(
-                    new Error(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
+                    new ErrorResponse(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
         }
 
         return friendsService.deleteFriend(ID);
     }
 
-    //Todo (Post) Первичный запрос на добавления в друзья, пока не разберемся с фронтом не активен
     @GetMapping("/{id}")
-    public ResponseEntity friendRequest (@PathVariable Integer id)
-    {
+    public ResponseEntity<?> friendRequest(@PathVariable Integer id) {
         return requestService.createResponse(id);
     }
 
-    //Todo нужно указать другой url в будущем, пока используем его
     @PostMapping("/{id}")
-    public ResponseEntity addRequestFriend(@PathVariable Integer id) {
+    public ResponseEntity<?> addRequestFriend(@PathVariable Integer id) {
         return setFriendshipService.createResponse(id, FriendshipStatus.REQUEST);
     }
 
-    //Todo уточнить способ вызова контроллера
     @PutMapping("/{id}")
-    public ResponseEntity declinedFriend(@PathVariable Integer id) {
+    public ResponseEntity<?> declinedFriend(@PathVariable Integer id) {
         return setFriendshipService.createResponse(id, FriendshipStatus.DECLINED);
     }
 }

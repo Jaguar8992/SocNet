@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import main.api.response.user.UserResponse;
 import main.model.entity.Post;
-import main.model.entity.User;
+import main.model.entity.PostLike;
 
 import java.util.List;
 
@@ -35,11 +35,15 @@ public class PostResponse {
 
     private long likes;
 
+    @JsonProperty("my_like")
+    private Boolean myLike;
+
     @JsonProperty("comments")
     private List<CommentResponse> commentResponseList;
 
-    public PostResponse(Post post, List<CommentResponse> commentResponseList)
-    {
+    private List<String> tags;
+
+    public PostResponse(Post post, List<CommentResponse> commentResponseList, PostLike postMyLike, List<String> tags) {
         this.id = post.getId();
         this.timestamp = post.getTimestamp();
         this.userResponse = new UserResponse(post.getAuthor());
@@ -47,6 +51,21 @@ public class PostResponse {
         this.postText = post.getPostText();
         this.isBlocked = post.getIsBlocked();
         this.likes = post.getLikes();
+        this.myLike = postMyLike != null;
         this.commentResponseList = commentResponseList;
+        long currentTime = System.currentTimeMillis();
+        this.tags = tags;
     }
+
+//    public PostResponse(Post post, List<CommentResponse> commentResponseList) {
+//        this.id = post.getId();
+//        this.timestamp = post.getTimestamp();
+//        this.userResponse = new UserResponse(post.getAuthor());
+//        this.title = post.getTitle();
+//        this.postText = post.getPostText();
+//        this.isBlocked = post.getIsBlocked();
+//        this.likes = post.getLikes();
+//        this.commentResponseList = commentResponseList;
+//        long currentTime = System.currentTimeMillis();
+//    }
 }

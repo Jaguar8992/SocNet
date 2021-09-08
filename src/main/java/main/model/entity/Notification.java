@@ -36,6 +36,9 @@ public class Notification {
 
     private String email;
 
+    @Column(name = "sent_email_time", columnDefinition = "DATETIME(6)")
+    private LocalDateTime sentEmailTime;
+
     @Column(length = 30)
     private String phone;
 

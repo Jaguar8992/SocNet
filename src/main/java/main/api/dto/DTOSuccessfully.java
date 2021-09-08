@@ -3,7 +3,6 @@ package main.api.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import main.api.dto.DTOMessage;
 
 @Data
 @AllArgsConstructor
@@ -14,5 +13,5 @@ public class DTOSuccessfully {
 
     private long timestamp;
 
-    private DTOMessage data;
+    private DTO data;
 }

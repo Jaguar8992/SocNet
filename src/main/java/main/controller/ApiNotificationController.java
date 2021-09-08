@@ -1,8 +1,8 @@
 package main.controller;
 
 import lombok.RequiredArgsConstructor;
-import main.api.response.account.Error;
 import main.api.dto.DTOError;
+import main.api.response.error.ErrorResponse;
 import main.service.notification.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,6 @@ public class ApiNotificationController {
 
     private final NotificationService notificationService;
 
-
     @GetMapping("/api/v1/notifications")
     private ResponseEntity<?> getMyNotifications(
             @RequestParam(required = false, defaultValue = "0") Integer offset,
@@ -27,7 +26,7 @@ public class ApiNotificationController {
             Principal principal) {
         if (principal == null) {
             return new ResponseEntity<>(
-                    new Error(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
+                    new ErrorResponse(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
         }
 
         return notificationService.getNotifications(offset, itemPerPage);
@@ -36,15 +35,15 @@ public class ApiNotificationController {
     @PutMapping("/api/v1/notifications")
     private ResponseEntity<?> readMyNotifications(
             @RequestParam(required = false, defaultValue = "0") Integer id,
-            @RequestParam(required = false, defaultValue = "20") Boolean all,
+            @RequestParam(required = false, defaultValue = "false") Boolean all,
             Principal principal) {
         if (principal == null) {
             return new ResponseEntity<>(
-                    new Error(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
+                    new ErrorResponse(DTOError.INVALID_REQUEST.get(), DTOError.UNAUTHORIZED.get()), HttpStatus.UNAUTHORIZED);
         }
 
         System.out.println(id + " " + all);
-        return notificationService.reedNotifications(all, id, principal);
+        return notificationService.reedNotifications(all, id);
     }
 
 }

@@ -1,6 +1,6 @@
 package main.controller;
 
-import main.service.PostService;
+import main.service.posts.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,8 +21,7 @@ public class ApiFeedsController {
     public ResponseEntity<?> getFeeds(@RequestParam(defaultValue = "", required = false) String name,
                                       @RequestParam(defaultValue = "0") Integer offset,
                                       @RequestParam(defaultValue = "20") Integer itemPerPage) {
-        return postService.createPostResponse("%" + name + "%", 0L,
-                0L, offset, itemPerPage);
+        return postService.createFeedsResponse("%" + name + "%", offset, itemPerPage);
     }
 
 }

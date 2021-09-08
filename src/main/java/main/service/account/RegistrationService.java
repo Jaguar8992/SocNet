@@ -2,18 +2,21 @@ package main.service.account;
 
 import com.github.cage.Cage;
 import com.github.cage.GCage;
-import main.api.response.account.Error;
 import main.api.dto.DTOError;
 import main.api.dto.DTOErrorDescription;
 import main.api.dto.DTOMessage;
 import main.api.request.UserRegistrationRequest;
+import main.api.response.CommonResponseList;
+import main.api.response.error.ErrorResponse;
 import main.api.response.registration.DataRegistrationResponse;
-import main.api.response.registration.UserRegistrationResponse;
 import main.mailSender.MailSender;
+import main.model.entity.NotificationSetting;
 import main.model.entity.TokenToUser;
 import main.model.entity.User;
 import main.model.entity.enums.MessagesPermission;
+import main.model.entity.enums.NotificationType;
 import main.model.entity.enums.UserType;
+import main.model.repository.NotificationSettingRepository;
 import main.model.repository.TokenToUserRepository;
 import main.model.repository.UserRepository;
 import org.apache.log4j.Logger;
@@ -29,29 +32,30 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Service
 public class RegistrationService {
     private final UserRepository userRepository;
     private final TokenToUserRepository tokenToUserRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
     private final Logger log = Logger.getLogger(RegistrationService.class.getName());
-    private String secretKey = "0x80C47b712f18D6e49DC3c33119FCfc876Ae24338";
-    private HttpClient httpClient = HttpClient.newBuilder()
+    private final String secretKey = "0x80C47b712f18D6e49DC3c33119FCfc876Ae24338";
+    private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5)).build();
 
     @Autowired
-    public RegistrationService(UserRepository userRepository, TokenToUserRepository tokenToUserRepository) {
+    public RegistrationService(UserRepository userRepository, TokenToUserRepository tokenToUserRepository, NotificationSettingRepository notificationSettingRepository) {
         this.userRepository = userRepository;
         this.tokenToUserRepository = tokenToUserRepository;
+        this.notificationSettingRepository = notificationSettingRepository;
     }
 
     public ResponseEntity<?> registrationUser(UserRegistrationRequest userRegistrationRequest, String address) {
 
         try {
-            if (!checkCaptcha(secretKey, userRegistrationRequest.getToken())){
+            if (!checkCaptcha(secretKey, userRegistrationRequest.getToken())) {
                 log.error(DTOErrorDescription.CAPTCHA_INCORRECT.get());
-                return ResponseEntity.badRequest().body(new Error(
+                return ResponseEntity.badRequest().body(new ErrorResponse(
                         DTOError.INVALID_REQUEST.get(),
                         DTOErrorDescription.CAPTCHA_INCORRECT.get()));
             }
@@ -62,31 +66,24 @@ public class RegistrationService {
 
         if (userRepository.findByEmail(userRegistrationRequest.getEmail()).isPresent()) {
             log.error(DTOErrorDescription.EXIST.get());
-            return ResponseEntity.badRequest().body(new Error(
+            return ResponseEntity.badRequest().body(new ErrorResponse(
                     DTOError.INVALID_REQUEST.get(),
                     DTOErrorDescription.EXIST.get()));
         } else return ResponseEntity.ok(setUserRegistrationInfo(userRegistrationRequest, address));
     }
 
-    private UserRegistrationResponse setUserRegistrationInfo(UserRegistrationRequest userRegistrationRequest, String address) {
-        UserRegistrationResponse userRegistrationResponse = new UserRegistrationResponse();
-        DataRegistrationResponse dataRegistrationResponse = new DataRegistrationResponse();
-
-        dataRegistrationResponse.setMessage(new DTOMessage().getMessage());
-        LocalDateTime dateTimeNow = LocalDateTime.now();
-        long timestamp = dateTimeNow.toEpochSecond(ZoneOffset.UTC);
-
-        setUser(userRegistrationRequest, dateTimeNow, address);
-        userRegistrationResponse.setTimestamp(timestamp);
-        userRegistrationResponse.setData(dataRegistrationResponse);
-
+    private CommonResponseList<?> setUserRegistrationInfo(UserRegistrationRequest userRegistrationRequest, String address) {
+        setUser(userRegistrationRequest, address);
         log.info("DTOSuccessfully");
 
-        return userRegistrationResponse;
+        return new CommonResponseList<>(
+                "string", new DataRegistrationResponse(
+                new DTOMessage().getMessage()));
     }
 
-    private void setUser(UserRegistrationRequest userRegistrationRequest, LocalDateTime dateTimeNow, String address) {
+    private void setUser(UserRegistrationRequest userRegistrationRequest, String address) {
         User user = new User();
+        LocalDateTime dateTimeNow = LocalDateTime.now();
         user.setRegDate(dateTimeNow);
         user.setFirstName(userRegistrationRequest.getFirstName());
         user.setLastName(userRegistrationRequest.getLastName());
@@ -98,10 +95,11 @@ public class RegistrationService {
         user.setIsApproved(false);
         user.setType(UserType.USER);
         user.setIsBlocked(false);
+        user.setIsOnline((byte) 0);
         user.setMessagesPermission(MessagesPermission.ALL);
-        //код не нужен! Он нужен только для фронта
         userRepository.save(user);
 
+        setNotification(user);
         sendEmail(user.getId(), userRegistrationRequest.getEmail(), address);
     }
 
@@ -121,9 +119,8 @@ public class RegistrationService {
         log.info("Registration confirm link was send");
     }
 
-    private boolean checkCaptcha (String secretKey, String token)
-    {
-        if (token.isEmpty()){
+    private boolean checkCaptcha(String secretKey, String token) {
+        if (token.isEmpty()) {
             return true;
         }
 
@@ -145,9 +142,23 @@ public class RegistrationService {
             JSONObject jsonObject = new JSONObject(response.body());
 
             return (boolean) jsonObject.get("success");
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error(e);
         }
         return false;
+    }
+
+    private void setNotification(User user) {
+
+        NotificationType[] types = NotificationType.values();
+
+        for (NotificationType type : types) {
+            NotificationSetting setting = new NotificationSetting();
+            setting.setType(type);
+            setting.setUser(user);
+            setting.setIsEnable((byte) 1);
+
+            notificationSettingRepository.save(setting);
+        }
     }
 }

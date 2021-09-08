@@ -79,6 +79,9 @@ public class User {
     @Column(name = "is_blocked", nullable = false)
     private byte isBlocked;
 
+    @Column(name = "is_online", nullable = false)
+    private byte isOnline;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserType type;
@@ -89,26 +92,17 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> notifications;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<NotificationSetting> notificationSettings;
+
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Post> posts;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostLike> likes;
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PostComment> comments;
-
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(
-            name = "user_id",
-            referencedColumnName = "id")
-    private List <NotificationSetting> notificationSetting;
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "user2dialog",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "dialog_id"))
-    private List<Dialog> dialogs;
 
     public boolean getIsApproved() {
         return isApproved == 1;

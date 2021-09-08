@@ -5,11 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import main.api.dto.post.DTOTypePost;
 import main.api.response.user.UserResponse;
 import main.model.entity.Post;
+import main.model.entity.PostLike;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Setter
@@ -36,13 +36,17 @@ public class WallPostResponse {
 
     private long likes;
 
+    @JsonProperty("my_like")
+    private Boolean myLike;
+
     @JsonProperty("comments")
     private List<CommentResponse> commentResponseList;
 
     private DTOTypePost type;
 
-    public WallPostResponse(Post post, List<CommentResponse> commentResponseList)
-    {
+    private List<String> tags;
+
+    public WallPostResponse(Post post, List<CommentResponse> commentResponseList, PostLike postMyLike, List<String> tags) {
         this.id = post.getId();
         this.timestamp = post.getTimestamp();
         this.userResponse = new UserResponse(post.getAuthor());
@@ -50,10 +54,16 @@ public class WallPostResponse {
         this.postText = post.getPostText();
         this.isBlocked = post.getIsBlocked();
         this.likes = post.getLikes();
+        this.myLike = postMyLike != null;
         this.commentResponseList = commentResponseList;
         long currentTime = System.currentTimeMillis();
-        this.type = post.getTimestamp() > currentTime ? DTOTypePost.QUEUED :
-                DTOTypePost.POSTED;
+        this.tags = tags;
+        if (post.getIsDeleted()) {
+            this.type = DTOTypePost.DELETED;
+        } else {
+            this.type = post.getTimestamp() > currentTime / 1000 ? DTOTypePost.QUEUED :
+                    DTOTypePost.POSTED;
+        }
     }
 
 }

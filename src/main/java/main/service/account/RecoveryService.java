@@ -1,11 +1,11 @@
 package main.service.account;
 
 import com.github.cage.GCage;
-import main.api.response.account.Error;
 import main.api.dto.DTOError;
 import main.api.dto.DTOErrorDescription;
 import main.api.dto.DTOMessage;
 import main.api.dto.DTOSuccessfully;
+import main.api.response.error.ErrorResponse;
 import main.mailSender.MailSender;
 import main.model.entity.TokenToUser;
 import main.model.entity.User;
@@ -36,15 +36,13 @@ public class RecoveryService {
     public ResponseEntity<?> createResponse(String email, String address) {
         Optional<User> user = userRepository.findByEmail(email);
 
-        //Проверка на корректность email
         if (user.isEmpty()) {
             log.error(DTOErrorDescription.BAD_CREDENTIALS.get());
-            return ResponseEntity.badRequest().body(new Error(
+            return ResponseEntity.badRequest().body(new ErrorResponse(
                     DTOError.INVALID_REQUEST.get(),
                     DTOErrorDescription.BAD_CREDENTIALS.get()));
         }
 
-        //Создание токена и привязка к пользователю
         String token = new GCage().getTokenGenerator().next();
 
         TokenToUser tokenToUser = new TokenToUser();
@@ -52,7 +50,6 @@ public class RecoveryService {
         tokenToUser.setUserId(user.get().getId());
 
         tokenToUserRepository.save(tokenToUser);
-        //Отправка сообщения
         MailSender.sendMessage(email, "Recovery link", address + "/change-password?token=" + token);
 
         log.info("Recovery link was send");

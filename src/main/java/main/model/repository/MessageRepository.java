@@ -15,6 +15,11 @@ public interface MessageRepository extends JpaRepository<Message, Integer> {
 
     Page<Message> findAllByDialogAndMessageTextContaining(Dialog dialog, String query, Pageable pageable);
 
-    @Query ("SELECT count(*) FROM Message WHERE recipient = :user AND  readStatus = 'SENT'")
-    Long getCountOfUnreadMessage (@Param("user") User user);
+    @Query(value = "SELECT COUNT(DISTINCT m.id) " +
+            "FROM Message m INNER JOIN Dialog d " +
+            "ON m.dialog = d " +
+            "WHERE (d.owner = :user or d.recipient = :user) " +
+            "and m.readStatus = 'SENT' and m.author <> :user")
+    Long getCountOfUnreadMessage(@Param("user") User user);
+
 }

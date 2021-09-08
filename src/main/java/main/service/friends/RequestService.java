@@ -1,10 +1,10 @@
 package main.service.friends;
 
-import main.api.response.account.Error;
 import main.api.dto.DTOError;
 import main.api.dto.DTOErrorDescription;
 import main.api.dto.DTOMessage;
 import main.api.dto.DTOSuccessfully;
+import main.api.response.error.ErrorResponse;
 import main.model.entity.Friendship;
 import main.model.entity.Notification;
 import main.model.entity.User;
@@ -24,25 +24,22 @@ import java.util.Date;
 import java.util.Optional;
 
 @Service
-public class RequestService
-{
+public class RequestService {
     private final NotificationRepository notificationRepository;
     private final FriendshipRepository friendshipRepository;
     private final UserRepository userRepository;
     private final UserService userService;
-    private Logger log = Logger.getLogger(RequestService.class.getName());
+    private final Logger log = Logger.getLogger(RequestService.class.getName());
 
     public RequestService(NotificationRepository notificationRepository, FriendshipRepository friendshipRepository,
-                          UserRepository userRepository, UserService userService)
-    {
+                          UserRepository userRepository, UserService userService) {
         this.notificationRepository = notificationRepository;
         this.friendshipRepository = friendshipRepository;
         this.userRepository = userRepository;
         this.userService = userService;
     }
 
-    public ResponseEntity createResponse(Integer dstUserId)
-    {
+    public ResponseEntity createResponse(Integer dstUserId) {
         User currentUser;
         User dstUser;
 
@@ -51,7 +48,7 @@ public class RequestService
             currentUser = userService.getCurrentUser();
         } catch (UsernameNotFoundException ex) {
             log.error(DTOErrorDescription.UNAUTHORIZED.get());
-            return ResponseEntity.status(401).body(new Error(
+            return ResponseEntity.status(401).body(new ErrorResponse(
                     DTOError.UNAUTHORIZED.get(),
                     DTOErrorDescription.UNAUTHORIZED.get()));
         }
@@ -61,7 +58,7 @@ public class RequestService
         //Получен ли пользователь
         if (friend.isEmpty()) {
             log.error(DTOErrorDescription.BAD_CREDENTIALS.get());
-            return ResponseEntity.status(400).body(new Error(
+            return ResponseEntity.status(400).body(new ErrorResponse(
                     DTOError.INVALID_REQUEST.get(),
                     DTOErrorDescription.BAD_CREDENTIALS.get()));
         }
@@ -71,7 +68,7 @@ public class RequestService
         //Не является ли добавляемый user текущим
         if (dstUser == currentUser) {
             log.error("cannot add yourself");
-            return ResponseEntity.status(400).body(new Error(
+            return ResponseEntity.status(400).body(new ErrorResponse(
                     DTOError.INVALID_REQUEST.get(),
                     DTOErrorDescription.BAD_CREDENTIALS.get()));
         }
@@ -83,14 +80,13 @@ public class RequestService
         log.info("Successfully");
 
         return ResponseEntity.ok(new DTOSuccessfully(
-            null,
-            new Date().getTime() / 1000,
-            new DTOMessage()));
+                null,
+                new Date().getTime() / 1000,
+                new DTOMessage()));
 
     }
 
-    private void createFriendShip(User current, User dst)
-    {
+    private void createFriendShip(User current, User dst) {
         Friendship friendship = new Friendship();
         friendship.setStatus(FriendshipStatus.REQUEST);
         friendship.setTime(LocalDateTime.now());
@@ -101,13 +97,12 @@ public class RequestService
     }
 
     //Todo сменить в будущем на NotificationApi
-    private void createNotification(User current, User dst)
-    {
+    private void createNotification(User current, User dst) {
         Notification notification;
         int friendshipId;
 
-        Optional <Friendship> optionalFriendship = friendshipRepository.findFriendshipForUser(current, dst);
-        if (optionalFriendship.isEmpty()){
+        Optional<Friendship> optionalFriendship = friendshipRepository.findFriendshipForUser(current, dst);
+        if (optionalFriendship.isEmpty()) {
             notification = new Notification();
             friendshipId = optionalFriendship.get().getId();
 
@@ -120,7 +115,6 @@ public class RequestService
             notification.setPhone(dst.getPhone());
 
             notificationRepository.save(notification);
-        }
-        else log.error("request not found");
+        } else log.error("request not found");
     }
 }

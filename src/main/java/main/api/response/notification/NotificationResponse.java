@@ -6,10 +6,8 @@ import lombok.Setter;
 import main.model.entity.Notification;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.List;
 
 @Getter
 @Setter

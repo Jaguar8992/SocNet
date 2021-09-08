@@ -10,6 +10,7 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -43,6 +44,9 @@ public class Post {
     @Column(name = "is_blocked", nullable = false)
     private byte isBlocked;
 
+    @Column(name = "is_deleted", nullable = false)
+    private byte isDeleted = 0;
+
     @OneToMany(mappedBy = "entityId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> entity;
 
@@ -63,14 +67,22 @@ public class Post {
     private long likes;
 
     public Post(int id, Long timestamp, User author, String title, String postText,
-                        byte isBlocked, long likes) {
+                byte isBlocked, byte isDeleted, long likes) {
         this.id = id;
         this.timestamp = timestamp;
         this.author = author;
         this.title = title;
         this.postText = postText;
         this.isBlocked = isBlocked;
+        this.isDeleted = isDeleted;
         this.likes = likes;
+    }
+
+    public List<Tag> getTags() {
+        if (tags == null) {
+            tags = new ArrayList<>();
+        }
+        return tags;
     }
 
     public boolean getIsBlocked() {
@@ -79,6 +91,14 @@ public class Post {
 
     public void setIsBlocked(boolean blocked) {
         isBlocked = blocked ? (byte) 1 : (byte) 0;
+    }
+
+    public boolean getIsDeleted() {
+        return isDeleted == 1;
+    }
+
+    public void setIsDeleted(boolean delete) {
+        this.isDeleted = delete ? (byte) 1 : (byte) 0;
     }
 }
 

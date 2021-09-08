@@ -12,13 +12,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface NotificationSettingRepository extends JpaRepository<NotificationSetting, Integer>
-{
-    @Query("FROM NotificationSetting setting WHERE setting.type = :type AND setting.userId = :userId")
-    Optional<NotificationSetting> findByTypeAndPersonId(@Param("type") NotificationType type, @Param("userId") Integer userId);
+public interface NotificationSettingRepository extends JpaRepository<NotificationSetting, Integer> {
+    @Query("FROM NotificationSetting setting WHERE setting.type = :type AND setting.user = :user")
+    Optional<NotificationSetting> findByTypeAndPersonId(@Param("type") NotificationType type, @Param("user") User user);
 
-    List<NotificationSetting> findByUserId(Integer userId);
+    List<NotificationSetting> findByUser(User user);
 
-    @Query("SELECT DISTINCT isEnable FROM NotificationSetting WHERE user_id = :user_id AND type = :setting")
-    Optional <Byte> getNotificationSetting(@Param("user_id") Integer userId, @Param("setting") NotificationType setting);
+    @Query("SELECT DISTINCT isEnable FROM NotificationSetting WHERE user = :user AND type = :setting")
+    Optional<Byte> getNotificationSetting(@Param("user") User user, @Param("setting") NotificationType setting);
 }

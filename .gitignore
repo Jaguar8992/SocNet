@@ -31,11 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-application.yml
-CodeStyle.xml
-docker-compose.yml
-Dockerfile
-Procfile
-socnet.iml
-system.properties

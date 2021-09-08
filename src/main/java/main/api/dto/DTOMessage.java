@@ -1,8 +1,7 @@
 package main.api.dto;
 
 
-public class DTOMessage {
-
+public class DTOMessage implements DTO {
     private String message = "ok";
 
     public String getMessage() {

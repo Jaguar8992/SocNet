@@ -1,12 +1,12 @@
 package main.service.account;
 
-import main.api.request.account.Notification;
-import main.api.response.account.Error;
-import main.api.response.account.ErrorListResponse;
-import main.api.dto.DTOSuccessfully;
 import main.api.dto.DTOError;
 import main.api.dto.DTOErrorDescription;
 import main.api.dto.DTOMessage;
+import main.api.dto.DTOSuccessfully;
+import main.api.request.account.DTONotification;
+import main.api.response.CommonResponseList;
+import main.api.response.error.ErrorResponse;
 import main.model.entity.NotificationSetting;
 import main.model.entity.User;
 import main.model.entity.enums.NotificationType;
@@ -44,30 +44,25 @@ public class NotificationsService {
         NotificationSetting setting;
         User currentUser;
 
-        //Проверка авторизирвоан ли пользователь
         try {
             currentUser = userService.getCurrentUser();
         } catch (UsernameNotFoundException ex) {
             log.error(DTOErrorDescription.UNAUTHORIZED.get());
-            return ResponseEntity.status(401).body(new Error(
+            return ResponseEntity.status(401).body(new ErrorResponse(
                     DTOError.UNAUTHORIZED.get(),
                     DTOErrorDescription.UNAUTHORIZED.get()));
         }
 
-        //Корректность тип уведомления
         if (notificationType == null) {
             log.error(DTOErrorDescription.BAD_CREDENTIALS.get());
-            return ResponseEntity.badRequest().body(new Error(
+            return ResponseEntity.badRequest().body(new ErrorResponse(
                     DTOError.INVALID_REQUEST.get(),
                     DTOErrorDescription.BAD_CREDENTIALS.get()));
         }
 
-        //Проверка существует ли у пользователя настройки по даному типу уведомления,
-        // если нет то они будут созданы
         Optional<NotificationSetting> notificationSettingOptional =
-                settingRepository.findByTypeAndPersonId(notificationType, currentUser.getId());
-        setting = notificationSettingOptional.orElseGet(() -> createSetting(notificationType, currentUser.getId()));
-        //Сохраняем настройки
+                settingRepository.findByTypeAndPersonId(notificationType, currentUser);
+        setting = notificationSettingOptional.orElseGet(() -> createSetting(notificationType, currentUser));
         setting.setIsEnable((byte) (isEnable ? 1 : 0));
         settingRepository.save(setting);
 
@@ -87,16 +82,16 @@ public class NotificationsService {
             currentUser = userService.getCurrentUser();
         } catch (UsernameNotFoundException ex) {
             log.error(DTOErrorDescription.UNAUTHORIZED.get());
-            return ResponseEntity.status(401).body(new Error(
+            return ResponseEntity.status(401).body(new ErrorResponse(
                     DTOError.UNAUTHORIZED.get(),
                     DTOErrorDescription.UNAUTHORIZED.get()));
         }
 
-        List<NotificationSetting> settings = settingRepository.findByUserId(currentUser.getId());
-        List<Notification> notificationSetting = new ArrayList<>();
+        List<NotificationSetting> settings = settingRepository.findByUser(currentUser);
+        List<DTONotification> notificationSetting = new ArrayList<>();
 
         for (NotificationSetting setting : settings) {
-            Notification notification = new Notification();
+            DTONotification notification = new DTONotification();
             notification.setEnable(setting.getIsEnable() == 1);
             notification.setNotificationType(setting.getType());
             notificationSetting.add(notification);
@@ -104,13 +99,13 @@ public class NotificationsService {
 
         log.info("Get notification");
 
-        return ResponseEntity.ok(new ErrorListResponse(notificationSetting));
+        return ResponseEntity.ok(new CommonResponseList<>(null, notificationSetting));
     }
 
-    private NotificationSetting createSetting(NotificationType type, int userId) {
+    private NotificationSetting createSetting(NotificationType type, User user) {
         NotificationSetting setting = new NotificationSetting();
         setting.setType(type);
-        setting.setUserId(userId);
+        setting.setUser(user);
         return setting;
     }
 }

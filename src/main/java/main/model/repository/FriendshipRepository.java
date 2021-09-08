@@ -16,10 +16,10 @@ public interface FriendshipRepository extends CrudRepository<Friendship, Integer
 
     @Modifying
     @Transactional
-    @Query(value = "DELETE FROM friendship " +
-            "WHERE (src_user_id = :deleteUserId AND dst_user_id = :currentUser) " +
-            "OR (src_user_id = :currentUser AND dst_user_id = :deleteUserId) " +
-            "AND status = 'FRIEND' ", nativeQuery = true)
+    @Query(value = "DELETE FROM Friendship fs " +
+            "WHERE (fs.srcUser.id = :deleteUserId AND fs.dstUser.id = :currentUser) " +
+            "OR (fs.srcUser.id = :currentUser AND fs.dstUser.id = :deleteUserId) " +
+            "AND fs.status = 'FRIEND' ")
     void deleteFriend(@Param("currentUser") Integer userId, @Param("deleteUserId") Integer deleteUserId);
 
     @Query("FROM Friendship WHERE (srcUser =:src AND dstUser =:dst)  OR (srcUser = :dst AND dstUser = :src) ")

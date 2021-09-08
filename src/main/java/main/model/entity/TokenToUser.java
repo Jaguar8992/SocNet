@@ -4,7 +4,7 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 @Entity
@@ -22,6 +22,6 @@ public class TokenToUser {
 
     @CreationTimestamp
     @Column(nullable = false)
-    private LocalDateTime time;
+    private Date time;
 
 }

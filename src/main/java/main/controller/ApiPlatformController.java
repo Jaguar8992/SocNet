@@ -28,6 +28,11 @@ public class ApiPlatformController {
         return platformService.getCities(countryId, city, offset, itemPerPage);
     }
 
+    @GetMapping("/getAllCountriesWithTowns")
+    private ResponseEntity<?> getAll() {
+        return platformService.getAll();
+    }
+
     @GetMapping("/languages")
     private ResponseEntity<?> getLanguages(
             @RequestParam(defaultValue = "", required = false) String language,

@@ -5,32 +5,33 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import main.model.entity.Message;
+import main.model.entity.User;
 
 import java.time.ZoneOffset;
 
+
 @Getter
 @Setter
-public class MessageResponse extends AbstractResponse {
+@NoArgsConstructor
+public class MessageResponse {
+
+    private int id;
 
     private long time;
 
-    @JsonProperty("author_id")
-    private int authorId;
-
-    @JsonProperty("recipient_id")
-    private int recipientId;
+    @JsonProperty("isSentByMe")
+    private boolean isSentByMe;
 
     @JsonProperty("message_text")
     private String messageText;
 
-    @JsonProperty("read_status")
-    private String readStatus;
-
-    public MessageResponse(Message message) {
-        super(message.getId());
+    public MessageResponse(Message message, User currentUser) {
+        this.id = message.getId();
         this.time = message.getTime().toEpochSecond(ZoneOffset.UTC);
-        this.authorId = message.getAuthor().getId();
+        User author = message.getAuthor();
+        if (author.getId() == currentUser.getId()) {
+            this.isSentByMe = true;
+        }
         this.messageText = message.getMessageText();
-        this.readStatus = message.getReadStatus().toString();
     }
 }

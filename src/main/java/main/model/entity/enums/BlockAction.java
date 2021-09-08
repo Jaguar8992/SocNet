@@ -1,7 +1,6 @@
 package main.model.entity.enums;
 
-public enum BlockAction
-{
+public enum BlockAction {
     BLOCK,
     UNBLOCK
 }

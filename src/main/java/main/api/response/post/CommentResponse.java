@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import main.model.entity.PostComment;
+import main.model.entity.PostLike;
 
 import java.time.ZoneOffset;
 
@@ -15,6 +16,14 @@ import java.time.ZoneOffset;
 @AllArgsConstructor
 public class CommentResponse {
     private int id;
+
+    @JsonProperty("first_name")
+    private String firstName;
+
+    @JsonProperty("last_name")
+    private String lastName;
+
+    private String photo;
 
     @JsonProperty("parent_id")
     private int parentId;
@@ -30,18 +39,29 @@ public class CommentResponse {
 
     private Long time;
 
-    @JsonProperty("is_blocked")
-    private boolean isBlocked;
+    @JsonProperty("my_like")
+    private Boolean myLike;
 
-    public CommentResponse(PostComment postComment) {
+    @JsonProperty("is_blocked")
+    private Boolean isBlocked;
+
+    @JsonProperty("is_deleted")
+    private Boolean isDeleted;
+
+    public CommentResponse(PostComment postComment, PostLike postMyLike) {
         this.id = postComment.getId();
         if (postComment.getParent() != null) {
             this.parentId = postComment.getParent().getId();
         }
+        this.firstName = postComment.getAuthor().getFirstName();
+        this.lastName = postComment.getAuthor().getLastName();
+        this.photo = postComment.getAuthor().getPhoto();
         this.commentText = postComment.getCommentText();
         this.postId = postComment.getPost().getId();
         this.authorId = postComment.getAuthor().getId();
         this.time = postComment.getTime().toEpochSecond(ZoneOffset.of("+03:00"));
+        this.myLike = postMyLike != null;
         this.isBlocked = postComment.getIsBlocked();
+        this.isDeleted = postComment.getIsDeleted();
     }
 }

@@ -3,43 +3,21 @@ package main.model.repository;
 import main.model.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.criteria.CriteriaBuilder;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends CrudRepository<User, Integer> {
-    String QUERY_USER_CHECK_EMAIL_PASSWORD = "select * from user where email = :eml and password = :pass";
-
-    @Query(value = QUERY_USER_CHECK_EMAIL_PASSWORD,
-            nativeQuery = true)
-    List<User> findUser(@Param("eml") String email, @Param("pass") String password);
+public interface UserRepository extends JpaRepository<User, Integer> {
 
     Optional<User> findUserById(Integer id);
-
-    String QUERY_CHECK_BLOCKED = "select is_blocked from user where email = :eml";
-
-    @Query(value = QUERY_CHECK_BLOCKED,
-            nativeQuery = true)
-    int countIsBlocked(@Param("eml") String email);
-
-    String QUERY_USER_CHECK_EMAIL = "select count(*) from user where email = :eml";
-
-    @Query(value = QUERY_USER_CHECK_EMAIL,
-            nativeQuery = true)
-    int countFindUserEmail(@Param("eml") String email);
-
-    String QUERY_USER_CHECK_CODE = "select count(*) from user where confirmation_code = :code";
-
-    @Query(value = QUERY_USER_CHECK_CODE,
-            nativeQuery = true)
-    int countFindUserCode(@Param("code") String code);
 
     @Query("FROM User WHERE email = :email")
     Optional<User> findByEmail(@Param("email") String email);
@@ -111,27 +89,44 @@ public interface UserRepository extends CrudRepository<User, Integer> {
             "    ELSE myFriensd.srcUser END) = u " +
             "WHERE (myFriensd.srcUser = :currentUser OR myFriensd.dstUser = :currentUser) " +
             "AND myFriensd.status = 'FRIEND'")
-    List<User> getAllMyFriends(@Param("currentUser") User user, Pageable pageable);
+    List<User> getAllMyFriends(@Param("currentUser") User user);
 
     @Query(value = "select distinct u.* from user u " +
             "inner join town t ON u.town_id = t.id " +
+            "inner join country c on t.country_id = c.id " +
             "where LOWER(u.first_name) like concat(LOWER(:firstName),'%') and " +
             "LOWER(u.last_name) LIKE concat(LOWER(:lastName),'%') and " +
-            "(CASE WHEN :townId > 0 then u.town_id = :townId ELSE u.id != 0 end) and " +
-            "(CASE WHEN :countryId > 0 then t.country_id = :countryId ELSE u.id != 0 end)" +
-            "and birth_date between :birthFrom and :birthTo " +
+            "(CASE WHEN length(:town) > 0 " +
+            " then LOWER(t.name) like concat(lower(:town),'%') " +
+            " ELSE u.id != 0 end) and " +
+            "(CASE WHEN length(:country) > 0 " +
+            "then LOWER(c.name) like concat(lower(:country),'%') " +
+            "ELSE u.id != 0 end) " +
+            "and birth_date between (current_date - interval :birthFrom year ) " +
+            "and (current_date - interval :birthTo year ) " +
             "and NOT (u.id = :id)",
             nativeQuery = true)
     Page<User> getUsersSearch(
             @Param("id") Integer id,
             @Param("firstName") String firstName,
             @Param("lastName") String lastName,
-            @Param("townId") int townId,
-            @Param("countryId") int countryId,
-            @Param("birthFrom") LocalDateTime birthFrom,
-            @Param("birthTo") LocalDateTime birthTo, Pageable pageable);
+            @Param("town") String town,
+            @Param("country") String country,
+            @Param("birthFrom") int birthFrom,
+            @Param("birthTo") int birthTo, Pageable pageable);
 
     @Query("FROM User WHERE id IN (:userIds)")
-    List <User> getUsersForDialog (@Param("userIds") List <Integer> userIds);
+    List<User> getUsersForDialog(@Param("userIds") List<Integer> userIds);
+
+    @Query(value = "SELECT DISTINCT u " +
+            "FROM User u " +
+            "WHERE DAYOFMONTH(u.birthDate) = DAYOFMONTH(:birthDay) AND " +
+            "MONTH(u.birthDate) = MONTH(:birthDay)")
+    List<User> getUsersByBirthDay(@Param("birthDay") LocalDateTime birthDay);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE User u SET u.photo = :photo WHERE u.id = :userId")
+    void updateUserPhoto(@Param("photo") String photo, @Param("userId") Integer userId);
 
 }
